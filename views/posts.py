@@ -10,6 +10,22 @@ from views.authorization import login_required
 
 
 # 后台请求
+@app.route("/api/post_search", methods=["GET"])
+@login_required
+def post_search(username):
+    try:
+        user = User.objects(username=username).first()
+    except ValidationError:
+        return jsonify({"error": "User not found"}), 404
+
+    keyword = request.args.get("keyword")
+
+    from mongoengine.queryset.visitor import Q
+    posts = Post.objects(Q(content__icontains=keyword)|Q(title__icontains=keyword))
+
+    return jsonify(posts.to_public_json())
+
+# 后台请求
 @app.route("/api/post", methods=["GET"])
 @login_required
 def admin_get_posts(username):
