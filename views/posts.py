@@ -156,6 +156,13 @@ def posts_detail(username,id):
     except ValidationError:
         return jsonify({"error": "Post not found"}), 404
 
+    user = User.objects(username=username).first()
+
+    if post.user in user.user_followed:
+        post.has_follow = True
+    else:
+        post.has_follow = False
+
     user_collect = post.user_collect
 
     if username in [u["username"] for u in user_collect]:

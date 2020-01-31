@@ -25,24 +25,14 @@ class User(Document):
     email = EmailField(required=True, unique=True)
     username = StringField(max_length=50, required=True, unique=True)
     password = StringField(required=True)
-    subscribed = ListField(ReferenceField("Subvue"))
     created = DateTimeField(required=True, default=datetime.datetime.now())
+    user_followed = ListField(ReferenceField("User", reverse_delete_rule=CASCADE))#关注别人
 
     def to_public_json(self):
         data = {
             "id": str(self.id),
             "username": self.username,
             "hashedEmail": hashlib.md5(self.email.encode("utf-8")).hexdigest(),
-            "subscribed": [{
-                "id": str(subvue.id),
-                "name": subvue.name,
-                "permalink": subvue.permalink,
-                "description": subvue.description,
-                "moderators": [{
-                    "id": str(moderator.id),
-                    "username": moderator.username
-                } for moderator in subvue.moderators],
-            } for subvue in self.subscribed],
             "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -99,7 +89,7 @@ class Post(Document):
     type = IntField(required=True)
     has_star = BooleanField(required=False)
     has_like = BooleanField(required=False)
-    
+    has_follow = BooleanField(required=False)
     meta = {'queryset_class': CustomQuerySet}
 
     def to_public_json(self):
@@ -108,6 +98,7 @@ class Post(Document):
             "title": self.title,
             "has_star":self.has_star,
             "has_like": self.has_like,
+            "has_follow": self.has_follow,
             "like_length": len(self.user_agree),
 
             "content": self.content,
@@ -118,7 +109,6 @@ class Post(Document):
             "comment_length":len(self.comments),
 
             "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
-            # "image": self.image,
             "type":self.type,
             "categories": [{
                 "id": str(category.id),

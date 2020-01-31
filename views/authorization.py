@@ -49,7 +49,8 @@ def sign_up():
     new_user = User(
         username=request.json.get("username"),
         email=request.json.get("email"),
-        password=hashed_password
+        password=hashed_password,
+        user_followed=[]
     ).save()
 
     token = jwt.encode({
