@@ -1,13 +1,8 @@
-import time
 
-import config
-import os
-import uuid
 
 from app import app
-from flask import jsonify, request
-from models import Post, User, Comment, Subvue
-from mongoengine.errors import ValidationError
+from flask import jsonify
+from models import Post, User
 from views.authorization import login_required
 
 

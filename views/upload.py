@@ -4,7 +4,6 @@ from flask import jsonify, request
 import os
 import uuid
 
-# from models import Category
 from models import Cover
 
 

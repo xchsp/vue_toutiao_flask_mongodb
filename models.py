@@ -1,6 +1,6 @@
 import datetime
 import hashlib
-import os
+
 
 from mongoengine import *
 
@@ -55,28 +55,7 @@ class Comment(EmbeddedDocument):
     created = DateTimeField(required=True, default=datetime.datetime.now())
 
 
-class Subvue(Document):
-    name = StringField(max_length=120, required=True)
-    permalink = StringField(max_length=120, required=True)
-    description = StringField(max_length=500, required=True)
-    created = DateTimeField(required=True, default=datetime.datetime.now())
-    moderators = ListField(ReferenceField(User))
 
-    meta = {'queryset_class': CustomQuerySet}
-
-    def to_public_json(self):
-        data = {
-            "id": str(self.id),
-            "name": self.name,
-            "permalink": self.permalink,
-            "description": self.description,
-            "moderators": [{
-                "id": str(moderator.id),
-                "username": moderator.username
-            } for moderator in self.moderators],
-        }
-
-        return data
 
 class Category(Document):
     name = StringField(max_length=120, required=True)
@@ -115,13 +94,12 @@ class Post(Document):
     content = StringField(max_length=5000)
     comments = ListField(EmbeddedDocumentField(Comment))
     created = DateTimeField(required=True, default=datetime.datetime.now())
-    # image = StringField()
     covers = ListField(ReferenceField(Cover, reverse_delete_rule=CASCADE))
     categories = ListField(ReferenceField(Category, reverse_delete_rule=CASCADE))
     type = IntField(required=True)
     has_star = BooleanField(required=False)
     has_like = BooleanField(required=False)
-    # like_length = IntField(required=True)
+    
     meta = {'queryset_class': CustomQuerySet}
 
     def to_public_json(self):
@@ -132,30 +110,13 @@ class Post(Document):
             "has_like": self.has_like,
             "like_length": len(self.user_agree),
 
-            # "category": {
-            #     "name": self.subvue.name,
-            #     "permalink": self.subvue.permalink,
-            #     "description": self.subvue.description,
-            #     "created": self.subvue.created.strftime("%Y-%m-%d %H:%M:%S"),
-            #     "moderators": [{
-            #         "id": str(moderator.id),
-            #         "username": moderator.username
-            #     } for moderator in self.subvue.moderators],
-            # },
             "content": self.content,
             "user": {
                 "id": str(self.user.id),
                 "nickname": self.user.username
             },
             "comment_length":len(self.comments),
-            # "comments": [{
-            #     "content": comment.content,
-            #     "created": comment.created.strftime("%Y-%m-%d %H:%M:%S"),
-            #     "user": {
-            #         "id": str(comment.user.id),
-            #         "username": comment.user.username
-            #     }
-            # } for comment in self.comments][::-1],
+
             "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
             # "image": self.image,
             "type":self.type,

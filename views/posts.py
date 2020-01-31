@@ -1,10 +1,7 @@
-import config
-import os
-import uuid
 
 from app import app
 from flask import jsonify, request
-from models import Post, User, Comment, Subvue, Category, Cover
+from models import Post, User, Comment, Category, Cover
 from mongoengine.errors import ValidationError
 from views.authorization import login_required
 
@@ -48,9 +45,6 @@ def admin_get_posts(username):
         'data': result
     }
 
-
-
-
     return jsonify(res)
 
 # 前台请求
@@ -77,14 +71,9 @@ def posts_create(username):
         return jsonify({"error": "Data not specified"}), 409
     if not body.get("title"):
         return jsonify({"error": "Title not specified"}), 409
-    # if not request.form.get("subvue"):
-    #     return jsonify({"error": "Subvue not specified"}), 409
     if not body.get("content"):
         return jsonify({"error": "Content not specified"}), 409
 
-    # subvue = Subvue.objects(permalink__iexact=request.form.get("subvue")).first()
-    # if not subvue:
-    #     return jsonify({"error": "Subvue " + request.form.get("subvue") + " not found"}), 404
 
     user = User.objects(username=username).first()
 
@@ -114,28 +103,13 @@ def posts_update(username,id):
         return jsonify({"error": "Data not specified"}), 409
     if not body.get("title"):
         return jsonify({"error": "Title not specified"}), 409
-    # if not request.form.get("subvue"):
-    #     return jsonify({"error": "Subvue not specified"}), 409
+
     if not body.get("content"):
         return jsonify({"error": "Content not specified"}), 409
-
-    # subvue = Subvue.objects(permalink__iexact=request.form.get("subvue")).first()
-    # if not subvue:
-    #     return jsonify({"error": "Subvue " + request.form.get("subvue") + " not found"}), 404
 
     user = User.objects(username=username).first()
 
 
-
-    # post = Post(
-    #     title=body.get("title"),
-    #     categories=body.get('categories'),
-    #     content=body.get("content"),
-    #     user=user,
-    #     covers=coverLst,
-    #     type=body.get('type')
-    #     # comments=[],
-    # ).save()
     try:
         post = Post.objects(pk=id).first()
 
@@ -159,10 +133,9 @@ def posts_update(username,id):
 
 
         post.title=body.get("title")
-        # post.categories=body.get('categories')
+
         post.content=body.get("content")
-        # post.user=user
-        # post.covers=coverLst
+
         post.type=body.get('type')
         post.save()
 
@@ -200,16 +173,6 @@ def posts_detail(username,id):
     return jsonify(post.to_public_json())
 
 
-# @app.route("/api/posts/user/<string:username>")
-# def posts_user(username):
-#     try:
-#         user = User.objects(username=username).first()
-#     except ValidationError:
-#         return jsonify({"error": "User not found"}), 404
-#
-#     posts = Post.objects(user=user).order_by("-created")
-#
-#     return jsonify(posts.to_public_json())
 
 
 @app.route("/api/posts/id/<string:id>", methods=["DELETE"])
@@ -341,35 +304,3 @@ def post_like(username, id):
 
 
 
-
-
-@app.route("/api/posts/<string:id>/downvote", methods=["POST"])
-@login_required
-def posts_downvote(username, id):
-    try:
-        post = Post.objects(pk=id).first()
-    except ValidationError:
-        return jsonify({"error": "Post not found"}), 404
-
-    user = User.objects(username=username).first()
-
-    upvotes = post.upvotes
-    downvotes = post.downvotes
-
-    if username in [u["username"] for u in downvotes]:
-        # User already upvotes
-        downvote_index = [d.username for d in downvotes].index(username)
-        downvotes.pop(downvote_index)
-    elif username in [u["username"] for u in upvotes]:
-        upvote_index = [d.username for d in upvotes].index(username)
-        upvotes.pop(upvote_index)
-        downvotes.append(user)
-    else:
-        downvotes.append(user)
-
-    post.save()
-
-    return jsonify({
-        "upvotes": post.to_public_json()["upvotes"],
-        "downvotes": post.to_public_json()["downvotes"]
-    })

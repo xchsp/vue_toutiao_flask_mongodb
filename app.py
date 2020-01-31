@@ -15,7 +15,6 @@ def images_get(filename):
 
 from views.authorization import *
 from views.posts import *
-from views.subvues import *
 from views.category import *
 from views.users import *
 from views.upload import *
