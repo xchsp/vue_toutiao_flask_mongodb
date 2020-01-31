@@ -8,7 +8,6 @@ from models import Post, User, Comment, Subvue, Category, Cover
 from mongoengine.errors import ValidationError
 from views.authorization import login_required
 
-
 # 后台请求
 @app.route("/api/post_search", methods=["GET"])
 @login_required
@@ -40,9 +39,19 @@ def admin_get_posts(username):
 
     posts = Post.objects(user=user).order_by("-created")
 
-    paginated_posts = posts.skip((pageIndex-1)*pageSize).limit(pageSize)
+    paginated_posts = posts.skip((pageIndex - 1) * pageSize).limit(pageSize)
 
-    return jsonify(paginated_posts.to_public_json())
+    result = paginated_posts.to_public_json()
+
+    res = {
+        'total': posts.count(),
+        'data': result
+    }
+
+
+
+
+    return jsonify(res)
 
 # 前台请求
 @app.route("/api/posts", methods=["GET"])
@@ -91,7 +100,8 @@ def posts_create(username):
         covers=coverLst,
         type=body.get('type'),
         comments=[],
-        user_collect=[]
+        user_collect=[],
+        user_agree=[],
     ).save()
 
     return jsonify(post.to_public_json())
@@ -179,6 +189,13 @@ def posts_detail(username,id):
         post.has_star = True
     else:
         post.has_star = False
+
+    user_agree = post.user_agree
+
+    if username in [u["username"] for u in user_agree]:
+        post.has_like = True
+    else:
+        post.has_like = False
 
     return jsonify(post.to_public_json())
 
@@ -297,6 +314,30 @@ def post_star(username, id):
         user_collect.append(user)
         post.save()
         return jsonify('收藏成功')
+
+@app.route("/api/post_like/<string:id>", methods=["GET"])
+@login_required
+def post_like(username, id):
+    try:
+        post = Post.objects(pk=id).first()
+    except ValidationError:
+        return jsonify({"error": "Post not found"}), 404
+
+    user = User.objects(username=username).first()
+
+    user_agree = post.user_agree
+
+
+    if username in [u["username"] for u in user_agree]:
+        # User already agree
+        user_collect_index = [d.username for d in user_agree].index(username)
+        user_agree.pop(user_collect_index)
+        post.save()
+        return jsonify('取消成功')
+    else:
+        user_agree.append(user)
+        post.save()
+        return jsonify('点赞成功')
 
 
 

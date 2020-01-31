@@ -1,4 +1,4 @@
-cffi==1.13.2
+cffi
 click==6.7
 Flask==0.12.2
 Flask-Cors==3.0.3

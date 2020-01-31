@@ -16,7 +16,7 @@ class CustomQuerySet(QuerySet):
                 json = doc.to_public_json()
                 result.append(json)
         except:
-            print('ddd')
+            print('error')
 
         return result
 
@@ -98,6 +98,7 @@ class Cover(Document):
 
     def to_public_json(self):
         data = {
+            "message":"文件上传成功",
             "data": {
                 "id": str(self.id),
                 "url": '/file/' + self.url,
@@ -110,6 +111,7 @@ class Post(Document):
     title = StringField(max_length=120, required=True)
     user = ReferenceField(User, reverse_delete_rule=CASCADE)
     user_collect = ListField(ReferenceField(User, reverse_delete_rule=CASCADE))
+    user_agree = ListField(ReferenceField(User, reverse_delete_rule=CASCADE))
     content = StringField(max_length=5000)
     comments = ListField(EmbeddedDocumentField(Comment))
     created = DateTimeField(required=True, default=datetime.datetime.now())
@@ -118,7 +120,8 @@ class Post(Document):
     categories = ListField(ReferenceField(Category, reverse_delete_rule=CASCADE))
     type = IntField(required=True)
     has_star = BooleanField(required=False)
-
+    has_like = BooleanField(required=False)
+    # like_length = IntField(required=True)
     meta = {'queryset_class': CustomQuerySet}
 
     def to_public_json(self):
@@ -126,6 +129,9 @@ class Post(Document):
             "id": str(self.id),
             "title": self.title,
             "has_star":self.has_star,
+            "has_like": self.has_like,
+            "like_length": len(self.user_agree),
+
             # "category": {
             #     "name": self.subvue.name,
             #     "permalink": self.subvue.permalink,

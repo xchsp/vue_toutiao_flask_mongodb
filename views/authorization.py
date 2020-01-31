@@ -29,7 +29,7 @@ def login_required(f):
 from app import app
 
 
-@app.route("/api/signup", methods=["POST"])
+@app.route("/api/register", methods=["POST"])
 def sign_up():
     if not request.json.get("username"):
         return jsonify({"error": "Username not specified"}), 409
