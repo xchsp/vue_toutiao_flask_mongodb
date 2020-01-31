@@ -8,9 +8,9 @@ from views.authorization import login_required
 # 后台请求
 @app.route("/api/post_search", methods=["GET"])
 @login_required
-def post_search(username):
+def post_search(userid):
     try:
-        user = User.objects(username=username).first()
+        user = User.objects(id=userid).first()
     except ValidationError:
         return jsonify({"error": "User not found"}), 404
 
@@ -24,9 +24,9 @@ def post_search(username):
 # 后台请求
 @app.route("/api/post", methods=["GET"])
 @login_required
-def admin_get_posts(username):
+def admin_get_posts(userid):
     try:
-        user = User.objects(username=username).first()
+        user = User.objects(id=userid).first()
     except ValidationError:
         return jsonify({"error": "User not found"}), 404
 
@@ -65,7 +65,7 @@ def client_get_posts():
 
 @app.route("/api/posts", methods=["POST"])
 @login_required
-def posts_create(username):
+def posts_create(userid):
     body = request.json
     if not body:
         return jsonify({"error": "Data not specified"}), 409
@@ -75,7 +75,7 @@ def posts_create(username):
         return jsonify({"error": "Content not specified"}), 409
 
 
-    user = User.objects(username=username).first()
+    user = User.objects(id=userid).first()
 
     coverLst = []
     for cover in body.get('cover'):
@@ -97,7 +97,7 @@ def posts_create(username):
 
 @app.route("/api/post_update/<string:id>", methods=["POST"])
 @login_required
-def posts_update(username,id):
+def posts_update(userid,id):
     body = request.json
     if not body:
         return jsonify({"error": "Data not specified"}), 409
@@ -107,7 +107,7 @@ def posts_update(username,id):
     if not body.get("content"):
         return jsonify({"error": "Content not specified"}), 409
 
-    user = User.objects(username=username).first()
+    user = User.objects(id=userid).first()
 
 
     try:
@@ -146,7 +146,7 @@ def posts_update(username,id):
 
 @app.route("/api/post/<string:id>")
 @login_required
-def posts_detail(username,id):
+def posts_detail(userid,id):
     try:
         post = Post.objects(pk=id).first()
 
@@ -156,7 +156,7 @@ def posts_detail(username,id):
     except ValidationError:
         return jsonify({"error": "Post not found"}), 404
 
-    user = User.objects(username=username).first()
+    user = User.objects(id=userid).first()
 
     if post.user in user.user_followed:
         post.has_follow = True
@@ -165,14 +165,14 @@ def posts_detail(username,id):
 
     user_collect = post.user_collect
 
-    if username in [u["username"] for u in user_collect]:
+    if user.username in [u["username"] for u in user_collect]:
         post.has_star = True
     else:
         post.has_star = False
 
     user_agree = post.user_agree
 
-    if username in [u["username"] for u in user_agree]:
+    if user.username in [u["username"] for u in user_agree]:
         post.has_like = True
     else:
         post.has_like = False
@@ -184,7 +184,7 @@ def posts_detail(username,id):
 
 @app.route("/api/posts/id/<string:id>", methods=["DELETE"])
 @login_required
-def posts_delete(username, id):
+def posts_delete(userid, id):
     try:
         post = Post.objects(pk=id).first()
 
@@ -194,8 +194,10 @@ def posts_delete(username, id):
     except ValidationError:
         return jsonify({"error": "Post not found"}), 404
 
+    user = User.objects(id=userid).first()
+
     # Check whether action was called by creator of the post
-    if username != post.user.username:
+    if user.username != post.user.username:
         return jsonify({"error": "You are not the creator of the post"}), 401
 
     post_info = post.to_public_json()
@@ -207,7 +209,7 @@ def posts_delete(username, id):
 
 @app.route("/api/post_comment/<string:id>", methods=["GET","POST"])
 @login_required
-def posts_create_comment(username, id):
+def posts_create_comment(userid, id):
     if request.method == 'POST':
         if not request.json.get('content'):
             return jsonify({"error": "No content specified"}), 409
@@ -218,7 +220,7 @@ def posts_create_comment(username, id):
         except ValidationError:
             return jsonify({"error": "Post not found"}), 404
 
-        user = User.objects(username=username).first()
+        user = User.objects(id=userid).first()
         comments = post.comments
         comments.append(Comment(user=user, content=content))
         post.save()
@@ -263,18 +265,18 @@ def posts_create_comment(username, id):
 
 @app.route("/api/post_star/<string:id>", methods=["GET"])
 @login_required
-def post_star(username, id):
+def post_star(userid, id):
     try:
         post = Post.objects(pk=id).first()
     except ValidationError:
         return jsonify({"error": "Post not found"}), 404
 
-    user = User.objects(username=username).first()
+    user = User.objects(id=userid).first()
 
     user_collect = post.user_collect
 
 
-    if username in [u["username"] for u in user_collect]:
+    if user.username in [u["username"] for u in user_collect]:
         # User already collect
         user_collect_index = [d.username for d in user_collect].index(username)
         user_collect.pop(user_collect_index)
@@ -287,20 +289,20 @@ def post_star(username, id):
 
 @app.route("/api/post_like/<string:id>", methods=["GET"])
 @login_required
-def post_like(username, id):
+def post_like(userid, id):
     try:
         post = Post.objects(pk=id).first()
     except ValidationError:
         return jsonify({"error": "Post not found"}), 404
 
-    user = User.objects(username=username).first()
+    user = User.objects(id=userid).first()
 
     user_agree = post.user_agree
 
 
-    if username in [u["username"] for u in user_agree]:
+    if user.username in [u["username"] for u in user_agree]:
         # User already agree
-        user_collect_index = [d.username for d in user_agree].index(username)
+        user_collect_index = [d.username for d in user_agree].index(user.username)
         user_agree.pop(user_collect_index)
         post.save()
         return jsonify('取消成功')

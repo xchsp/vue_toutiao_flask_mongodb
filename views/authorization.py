@@ -20,7 +20,7 @@ def login_required(f):
             except:
                 return jsonify({"error": "you are not logged in"}), 401
 
-            return f(username=user["username"], *args, **kwargs)
+            return f(userid=user["userid"], *args, **kwargs)
         else:
             return jsonify({"error": "you are not logged in"}), 401
     return wrap
@@ -50,10 +50,13 @@ def sign_up():
         username=request.json.get("username"),
         email=request.json.get("email"),
         password=hashed_password,
+        head_img='',
+        gender=1,
         user_followed=[]
     ).save()
 
     token = jwt.encode({
+        "userid": new_user.id,
         "username": new_user.username,
         "email": new_user.email,
         "password": new_user.password,
@@ -97,6 +100,7 @@ def login():
         return jsonify({"error": "Invalid password"}), 401
 
     token = jwt.encode({
+        "userid": user.id,
         "username": user.username,
         "email": user.email,
         "password": user.password,
@@ -142,6 +146,7 @@ def login_c():
         return jsonify({"error": "Invalid password"}), 401
 
     token = jwt.encode({
+        "userid": str(user.id),
         "username": user.username,
         "email": user.email,
         "password": user.password,

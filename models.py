@@ -26,7 +26,12 @@ class User(Document):
     username = StringField(max_length=50, required=True, unique=True)
     password = StringField(required=True)
     created = DateTimeField(required=True, default=datetime.datetime.now())
+    head_img = StringField(required=True)
+    gender = IntField(required=True)
     user_followed = ListField(ReferenceField("User", reverse_delete_rule=CASCADE))#关注别人
+
+    # meta = {'queryset_class': CustomQuerySet}
+
 
     def to_public_json(self):
         data = {
@@ -34,6 +39,8 @@ class User(Document):
             "username": self.username,
             "hashedEmail": hashlib.md5(self.email.encode("utf-8")).hexdigest(),
             "created": self.created.strftime("%Y-%m-%d %H:%M:%S"),
+            "head_img": self.head_img,
+            "gender": self.gender,
         }
 
         return data
