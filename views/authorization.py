@@ -100,7 +100,7 @@ def login():
         return jsonify({"error": "Invalid password"}), 401
 
     token = jwt.encode({
-        "userid": user.id,
+        "userid": str(user.id),
         "username": user.username,
         "email": user.email,
         "password": user.password,
