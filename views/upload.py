@@ -11,7 +11,7 @@ from models import Cover
 def upload():
     image = request.files.get("file")
     if image:
-        if not image.filename.endswith(tuple([".jpg", ".png"])):
+        if not image.filename.endswith(tuple([".jpg", ".png", ".mp4"])):
             return jsonify({"error": "Image is not valid"}), 409
 
         # Generate random filename
