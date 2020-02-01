@@ -59,6 +59,8 @@ def user_comments(userid):
 @app.route("/api/user_follow/<string:uid>", methods=["GET"])
 @login_required
 def user_follow(userid, uid):
+    if userid == uid:
+        return jsonify('不能关注自己')
     try:
         userFollowed = User.objects(pk=uid).first()
     except ValidationError:
